@@ -45,6 +45,7 @@ let creepShared = {
                     structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
             }
     });
+    console.log("Extensions with available space: " + targets.length);
     if(targets == 0)
     {
       targets = creep.room.find(FIND_STRUCTURES, {
@@ -53,15 +54,17 @@ let creepShared = {
                       structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
               }
             });
+        console.log("Spawns with available space: " + targets.length);
     }
     if(targets == 0)
     {
       targets = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-          structure.structureType == STRUCTURE_CONTAINER &&
-          structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-        }
-      })
+            filter: (structure) => {
+                  return (structure.structureType == STRUCTURE_CONTAINER) &&
+                   (structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+            }
+          });
+      console.log("Containers with available space: " + targets.length);
     }
 
     if(targets.length > 0) {
@@ -70,7 +73,7 @@ let creepShared = {
         }
     }
     else{
-      creep.say('📦Full', true);
+      creep.say('🗳️Full', true);
     }
   }
 }
