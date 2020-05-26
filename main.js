@@ -15,6 +15,7 @@ var builderCount = 2;
 var upgraderCount = 8;
 var defenderCount = 1;
 var repairerCount = 2;
+var controllerClaimer = 0; //..WORK IN PROGRESS
 //////////////////////////////////////////////////////////
 var room1 = 'W8N3';
 var mainSpawn = Game.rooms[room1].find(FIND_MY_STRUCTURES).filter((s)=> s.structureType == 'spawn')[0];
