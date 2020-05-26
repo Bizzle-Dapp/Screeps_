@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////
-var baseSpawner = require('base.spawner');
-var consoleNotifications = require('console.notifications');
+var baseSpawner = require('role.baseSpawner');
+var consoleNotifications = require('global.notifications');
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 var roleDefender = require('role.defender');
 var roleRepairer = require('role.repairer');
 var roleManualAttackProtocol = require('role.manualAttackProtocol');
-var structureTower = require('structure.tower');
+var structureTower = require('role.structureTower');
 
 //////////////////////////////////////////////////////////
 var harvesterCount = 3;
@@ -34,7 +34,7 @@ module.exports.loop = function () {
 // Execute notifications
 consoleNotifications.run();
 // Execute Spawning Module
-baseSpawner.run(harvesterCount, builderCount, upgraderCount, defenderCount, repairerCount);
+baseSpawner.run(mainSpawn.name, harvesterCount, builderCount, upgraderCount, defenderCount, repairerCount);
 // Cleanup
 clearance();
 // Execute All Creep Roles
