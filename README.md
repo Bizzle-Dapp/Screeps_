@@ -1,4 +1,5 @@
 # Screeps_
+![ScreepsBodyExplained](https://docs.screeps.com/img/bodyparts.png)
 
 ### This is my repo of my AI for Screeps.
 - In case you didn't know what Screeps is, here is a link to the website: https://screeps.com/ 
