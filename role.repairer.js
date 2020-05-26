@@ -46,8 +46,7 @@ let roleRepairer = {
       }
       else {
         let collectionDepots = creep.room.find(FIND_STRUCTURES).filter((structure) => {
-          return (structure.structureType == STRUCTURE_CONTAINER ||
-                  structure.structureType == STRUCTURE_EXTENSION) &&
+          return (structure.structureType == STRUCTURE_CONTAINER) &&
                   structure.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
         })
         if(collectionDepots.length > 0)

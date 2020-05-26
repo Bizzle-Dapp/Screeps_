@@ -39,9 +39,8 @@ let roleBuilder = {
         let sites = creep.room.find(FIND_CONSTRUCTION_SITES);
           if(sites.length > 0) {
           let collectionDepots = creep.room.find(FIND_STRUCTURES).filter((structure) => {
-            return (structure.structureType == STRUCTURE_CONTAINER ||
-                    structure.structureType == STRUCTURE_EXTENSION) &&
-                    structure.store.getFreeCapacity(RESOURCE_ENERGY) < (structure.store.getCapacity(RESOURCE_ENERGY) / 2);
+            return (structure.structureType == STRUCTURE_CONTAINER) &&
+                    (structure.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
           })
           if(collectionDepots.length > 0)
           {
