@@ -29,7 +29,7 @@ let roleDefender = {
       let closestHostile = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
       if(closestHostile) {
         creep.say('⚔️Engaging', true);
-          if(creep.rangedAttack(closestHostile) == ERR_NOT_IN_RANGE) {
+          if(creep.attack(closestHostile) == ERR_NOT_IN_RANGE) {
               creep.moveTo(closestHostile, {visualizePathStyle: {stroke: '#f70000bf'}});
           }
       }

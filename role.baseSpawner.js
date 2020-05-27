@@ -9,9 +9,13 @@ let baseSpawner = {
 }
 
 function spawnChecker(spawn, H, B, U, D, R, C){
+
+    let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     spawning = 0;
 
-    if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length < 5 || Game.spawns['Spawn1'].room.find(FIND_MY_CREEPS).length < 5)
+    if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length < 5 ||
+    Game.spawns['Spawn1'].room.find(FIND_MY_CREEPS).length < 5 ||
+    harvesters.length < 2)
     {
         // Perform basic Spawning Routine
         basicSpawnRoutine(spawn, H, B, U, D);

@@ -29,7 +29,7 @@ let roleRepairer = {
         {
           targets = creep.room.find(FIND_STRUCTURES).filter((structure) => {
             return (structure.structureType == STRUCTURE_WALL) &&
-                    structure.hits < 1000;
+                    structure.hits < 5000;
           });
         }
         if(targets.length > 0)

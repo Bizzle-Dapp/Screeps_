@@ -28,7 +28,7 @@ let spawnTypes = {
       /** @param {SpawnName} spawnName **/
       tier1Defender: function(spawn){
       let newName = 'De-A' + Game.time;
-      Game.spawns[spawn].spawnCreep([RANGED_ATTACK,MOVE], newName,
+      Game.spawns[spawn].spawnCreep([ATTACK,MOVE], newName,
           {memory: {role: 'defender'}});
       },
 
@@ -66,7 +66,7 @@ let spawnTypes = {
       /** @param {SpawnName} spawnName **/
       tier2Defender: function(spawn){
       let newName = 'De-B' + Game.time;
-      Game.spawns[spawn].spawnCreep([RANGED_ATTACK,RANGED_ATTACK,MOVE,TOUGH,TOUGH], newName,
+      Game.spawns[spawn].spawnCreep([ATTACK,ATTACK,ATTACK,MOVE,TOUGH,TOUGH,TOUGH,TOUGH], newName,
           {memory: {role: 'defender'}});
       },
 

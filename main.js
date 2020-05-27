@@ -10,14 +10,14 @@ var roleManualAttackProtocol = require('role.manualAttackProtocol');
 var structureTower = require('role.structureTower');
 
 //////////////////////////////////////////////////////////
-var harvesterCount = 3;
-var builderCount = 2;
-var upgraderCount = 8;
-var defenderCount = 1;
+var harvesterCount = 4;
+var builderCount = 4;
+var upgraderCount = 6;
+var defenderCount = 4;
 var repairerCount = 2;
 var controllerClaimer = 0; //..WORK IN PROGRESS
 //////////////////////////////////////////////////////////
-var room1 = 'W8N3';
+var room1 = 'W8N3'; // Ideally, we need to access this programatically...
 var mainSpawn = Game.rooms[room1].find(FIND_MY_STRUCTURES).filter((s)=> s.structureType == 'spawn')[0];
 
 //////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ var targetRoomPosition = new RoomPosition(26,30,'W5N3');
 
 module.exports.loop = function () {
 // IN Testing
-
+// console.log(JSON.stringify(getFlag('Bizzle_Dapp_Home').memory));
 //////////////////
 
 // Execute notifications
@@ -90,6 +90,8 @@ function clearance(){
 // In Testing
 //
 
-function hostileAlert(){
-    return Game.spawns['Spawn1'].pos.findInRange(FIND_HOSTILE_CREEPS);
+function getFlag(name){
+  if(Game.flags[name]){
+    return Game.flags[name];
+  }
 }
