@@ -18,11 +18,23 @@ let structureTower = {
         }
 
         if(tower) {
-        let closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (structure) => structure.hits < structure.hitsMax
-        });
-        if(closestDamagedStructure) {
-            tower.repair(closestDamagedStructure);
+          let targets = tower.room.find(FIND_STRUCTURES).filter((structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION ||
+                    structure.structureType == STRUCTURE_CONTAINER ||
+                    structure.structureType == STRUCTURE_SPAWN ||
+                    structure.structureType == STRUCTURE_TOWER ||
+                    structure.structureType == STRUCTURE_ROAD) &&
+                    structure.hits < (structure.hitsMax * 0.99);
+          })
+          if(targets.length == 0)
+          {
+            targets = tower.room.find(FIND_STRUCTURES).filter((structure) => {
+              return (structure.structureType == STRUCTURE_WALL) &&
+                      structure.hits < 5000;
+            });
+          }
+        if(targets.length > 0) {
+            tower.repair(targets[0]);
         }
 
         let closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
