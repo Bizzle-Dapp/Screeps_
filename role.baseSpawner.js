@@ -12,6 +12,18 @@ function spawnChecker(spawn, H, B, U, D, R, C){
 
     let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     spawning = 0;
+    if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length >= 5 &&
+    Game.spawns['Spawn1'].room.find(FIND_MY_CREEPS).length > (H + B))
+    {
+        // Perform tier 3 Spawning basicSpawnRoutine
+        tier3SpawnRoutine(spawn, H, B, U, D, R, C);
+    }
+
+    if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length >= 5)
+    {
+        // Perform  tier 2 Spawning Routine
+        tier2SpawnRoutine(spawn, H, B, U, D, R, C);
+    }
 
     if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length < 5 ||
     Game.spawns['Spawn1'].room.find(FIND_MY_CREEPS).length < 5 ||
@@ -19,11 +31,6 @@ function spawnChecker(spawn, H, B, U, D, R, C){
     {
         // Perform basic Spawning Routine
         basicSpawnRoutine(spawn, H, B, U, D);
-    }
-    if(Game.spawns['Spawn1'].room.find(FIND_STRUCTURES).filter(s => s.structureType == 'extension').length >= 5)
-    {
-        // Perform  tier 2 Spawning Routine
-        tier2SpawnRoutine(spawn, H, B, U, D, R, C);
     }
 }
 
@@ -103,8 +110,46 @@ function tier2SpawnRoutine(spawn, H, B, U, D, R){
     }
 }
 
-function tier3SpawnRoutine(H,B,U,D,R,C){
+function tier3SpawnRoutine(spawn,H,B,U,D,R,C){
+  // Check on our Defenders
+  let defenders = _.filter(Game.creeps, (creep) => creep.memory.role == 'defender');
 
+  if(defenders.length < D && spawning < 1) {
+      spawning = 1;
+      spawnTypes.tier3Defender(spawn);
+  }
+
+  // Check on our Harvesters...
+  let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
+
+  if(harvesters.length < H && spawning < 1) {
+      spawning = 1;
+      spawnTypes.tier3Harvester(spawn);
+  }
+
+  // Check on our Builders...
+  let builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+
+  if(builders.length < B && spawning < 1) {
+      spawning = 1;
+      spawnTypes.tier3Builder(spawn);
+  }
+
+  let repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
+
+  if(repairers.length < R && spawning < 1) {
+      spawning = 1;
+      spawnTypes.tier3Repairer(spawn);
+  }
+
+  // Check on our Upgraders
+  let upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
+
+  if(upgraders.length < U && spawning < 1) {
+      spawning = 1;
+      spawnTypes.tier3Upgrader(spawn);
+  }
+  tier2SpawnRoutine(spawn, H, B, U, D, R);
 }
 
 
