@@ -1,0 +1,25 @@
+{
+  "name": "screeps_",
+  "description": "![ScreepsBodyExplained](https://docs.screeps.com/img/bodyparts.png)\r #### In case you didn't know what Screeps is, here is a link to the website: https://screeps.com/ \r ![ScreepsMapExplained](https://docs.screeps.com/img/invader-core-expand.gif)\r #### API documentation for the Framework to write the AI can be found here: https://docs.screeps.com/\r ![ScreepsGeneralAppearance](https://docs.screeps.com/img/defense4.png)\r #### Basic Tutorials, Training Rooms and Simulation Sandboxs editable within the browser can be found here: https://screeps.com/a/#!/sim",
+  "version": "1.0.0",
+  "main": "rollup.config.js",
+  "devDependencies": {},
+  "scripts": {
+    "deploy": "rollup -c && deploy.cmd",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bizzle-Dapp/Screeps_.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bizzle-Dapp/Screeps_/issues"
+  },
+  "homepage": "https://github.com/Bizzle-Dapp/Screeps_#readme",
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "rollup-plugin-clear": "^2.0.7"
+  }
+}

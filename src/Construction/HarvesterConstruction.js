@@ -11,4 +11,4 @@ function harvesterConstruction(baseConstants) {
     }
 }
 
-module.exports = harvesterConstruction;
+export default harvesterConstruction;

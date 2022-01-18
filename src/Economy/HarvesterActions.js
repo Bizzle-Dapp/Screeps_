@@ -1,5 +1,7 @@
 
 function harvest(baseConstants) {
+    let harvesters = _.filter(Game.creeps,
+        (creep) => creep.memory.role == 'harvester');
     // Move Harvester to location, harvest, then return to spawn and diposit
     harvesters.forEach((creep) => {
         if (creep.store.getFreeCapacity() > 0) {
