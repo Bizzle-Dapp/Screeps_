@@ -23,19 +23,19 @@ function harvest$1(baseConstants) {
         (creep) => creep.memory.role == 'harvester');
     // Move Harvester to location, harvest, then return to spawn and diposit
     harvesters.forEach((creep) => {
-        if (creep.store.getFreeCapacity() > 0) {
-            if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(
-                    baseConstants.potentialResource[creep.memory.resourceDivide], 
-                    { visualizePathStyle: { stroke: '#ffaa00' } 
+        if(!creep.memory.task){
+            creep.memory.task = "IDLE";
+        }
+        if (creep.store.getFreeCapacity() > 0) ;
+        if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(
+                baseConstants.potentialResource[creep.memory.resourceDivide],
+                {
+                    visualizePathStyle: { stroke: '#ffaa00' }
                 });
-            } else {
-                creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]);
-            }
-        } else {
-            if(creep.transfer(baseConstants.mainSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(baseConstants.mainSpawn, {visualizePathStyle: {stroke: '#ffffff'}});
-            }
+        }
+        if (creep.transfer(baseConstants.mainSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(baseConstants.mainSpawn, { visualizePathStyle: { stroke: '#ffffff' } });
         }
     });
 }
@@ -47,7 +47,15 @@ function upgrade$1(baseConstants) {
         (creep) => creep.memory.role == 'upgrader');
     // Move Harvester to location, harvest, then return to spawn and diposit
     upgraders.forEach((creep) => {
-        if (creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
+        if(creep.memory.upgrading && creep.store[RESOURCE_ENERGY] === 0) {
+            creep.memory.upgrading = false;
+            creep.say('🔄harvest', true);
+        }
+        if(!creep.memory.upgrading && creep.store.getFreeCapacity() === 0){
+            creep.memory.upgrading = true;
+            creep.say('💪upgrade', true);
+        }
+        if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
             if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(
                     baseConstants.potentialResource[creep.memory.resourceDivide], 
@@ -101,6 +109,7 @@ function upgraderConstruction(baseConstants) {
 }
 
 function CreepConstructionController(baseConstants) {
+    
     harvesterConstruction(baseConstants);
     upgraderConstruction(baseConstants);
 }
