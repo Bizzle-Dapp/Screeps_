@@ -1,5 +1,7 @@
 
-function upgrade(baseConstants) {
+const upgrade = (baseConstants) => {
+    const { potentialResource } = baseConstants;
+
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
     // Move Harvester to location, harvest, then return to spawn and diposit
@@ -13,9 +15,9 @@ function upgrade(baseConstants) {
             creep.say('💪upgrade', true);
         }
         if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-            if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            if (creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(
-                    baseConstants.potentialResource[creep.memory.resourceDivide], 
+                    potentialResource[creep.memory.resourceDivide], 
                     { visualizePathStyle: { stroke: '#ffaa00' } 
                 });
             }
@@ -31,4 +33,4 @@ function upgrade(baseConstants) {
     });
 }
 
-module.exports = upgrade;
+export default upgrade;

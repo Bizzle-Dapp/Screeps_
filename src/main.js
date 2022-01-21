@@ -1,12 +1,14 @@
-import { generateBaseConstants } from './Constants';
+import generateBaseConstants from './Constants';
 
 import economyController from './Economy/_EconomyController';
+import logisticsContorller from './Logistics/_LogisticsController';
 import creepConstructionController from './Construction/_CreepConstructionController';
 
 module.exports.loop = function () {
     const baseConstants = generateBaseConstants();
 
     economyController(baseConstants);
+    logisticsContorller(baseConstants);
     creepConstructionController(baseConstants);
 
     clearance();

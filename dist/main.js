@@ -1,6 +1,6 @@
 'use strict';
 
-const spawnerRooms = ['W6N1'];
+const spawnerRooms = Object.values(Game.spawns).map((v) => v.room.name);
 
 /**
  * Returns key base information
@@ -8,41 +8,59 @@ const spawnerRooms = ['W6N1'];
 const generateBaseConstants = () => {
     // Once we have multiple spawns, pass key/value pairs including nearby resources related to each spawner
     let mainSpawn = Game.rooms[spawnerRooms[0]]
-                    .find(FIND_MY_STRUCTURES)
-                    .filter((s) => s.structureType == 'spawn')[0];
+        .find(FIND_MY_STRUCTURES)
+        .filter((s) => s.structureType == 'spawn')[0];
+
     let potentialResource = Game.rooms[spawnerRooms[0]].find(FIND_SOURCES_ACTIVE);
-    
+
     return {
         mainSpawn,
         potentialResource
     }
 };
 
-function harvest$1(baseConstants) {
+function harvest(baseConstants) {
+    const { mainSpawn, potentialResource } = baseConstants;
+
     let harvesters = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'harvester');
-    // Move Harvester to location, harvest, then return to spawn and diposit
+    // Move Harvester to location, harvest, then return to spawn and deposit
     harvesters.forEach((creep) => {
-        if(!creep.memory.task){
-            creep.memory.task = "IDLE";
+        if (!creep.memory.harvesting && creep.store[RESOURCE_ENERGY] === 0) {
+            creep.memory.harvesting = true;
+            creep.say('🔄harvest', true);
         }
-        if (creep.store.getFreeCapacity() > 0) ;
-        if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+        if (creep.memory.harvesting && creep.store.getFreeCapacity() === 0) {
+            creep.memory.harvesting = false;
+            creep.say('💲banking', true);
+        }
+        if (creep.memory.harvesting && creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
             creep.moveTo(
-                baseConstants.potentialResource[creep.memory.resourceDivide],
-                {
-                    visualizePathStyle: { stroke: '#ffaa00' }
-                });
+                potentialResource[creep.memory.resourceDivide],
+                { visualizePathStyle: { stroke: '#ffaa00' } });
+
         }
-        if (creep.transfer(baseConstants.mainSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(baseConstants.mainSpawn, { visualizePathStyle: { stroke: '#ffffff' } });
+        if (!creep.memory.harvesting) {
+            mainSpawn.room.find(FIND_MY_STRUCTURES, {
+                filter: (i) => ((i.structureType == STRUCTURE_CONTAINER) &&
+                    i.store.getFreeCapacity() > 0)
+            });
+            
+            if (creep.transfer(mainSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(mainSpawn,
+                    { visualizePathStyle: { stroke: '#ffffff' } });
+            }
         }
     });
 }
 
-var HarvesterActions = harvest$1;
+function economyController(baseConstants) {
+    harvest(baseConstants);
+}
 
-function upgrade$1(baseConstants) {
+const upgrade = (baseConstants) => {
+    const { potentialResource } = baseConstants;
+
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
     // Move Harvester to location, harvest, then return to spawn and diposit
@@ -56,9 +74,9 @@ function upgrade$1(baseConstants) {
             creep.say('💪upgrade', true);
         }
         if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-            if (creep.harvest(baseConstants.potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            if (creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(
-                    baseConstants.potentialResource[creep.memory.resourceDivide], 
+                    potentialResource[creep.memory.resourceDivide], 
                     { visualizePathStyle: { stroke: '#ffaa00' } 
                 });
             }
@@ -72,46 +90,43 @@ function upgrade$1(baseConstants) {
             }
         }
     });
-}
+};
 
-var UpgraderActions = upgrade$1;
-
-let harvest = HarvesterActions;
-let upgrade = UpgraderActions;
-
-function economyController(baseConstants) {
-    harvest(baseConstants);
+function logisticsController(baseConstants) {
     upgrade(baseConstants);
 }
 
-var _EconomyController = economyController;
-
 function harvesterConstruction(baseConstants) {
+    const { mainSpawn } = baseConstants;
     // Spawn a Harvester
     let harvesters = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'harvester');
     if (harvesters.length < 4) {
         let id = Date.now();
-        baseConstants.mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Worker-${id.toString()}`, {
+        mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Worker-${id.toString()}`, {
             memory: { role: 'harvester', resourceDivide: (harvesters.length % 2)  }
         });
     }
 }
 
 function upgraderConstruction(baseConstants) {
+    const { mainSpawn } = baseConstants;
     // Spawn an Upgrader
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
     if (upgraders.length < 1) {
         let id = Date.now();
-        baseConstants.mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Upgrader-${id.toString()}`, {
+        mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Upgrader-${id.toString()}`, {
             memory: { role: 'upgrader', resourceDivide: (upgraders.length % 2)  }
         });
     }
 }
 
 function CreepConstructionController(baseConstants) {
-    
+    // Detect available building space
+
+    // Allocate space depending on current projects
+
     harvesterConstruction(baseConstants);
     upgraderConstruction(baseConstants);
 }
@@ -119,7 +134,8 @@ function CreepConstructionController(baseConstants) {
 module.exports.loop = function () {
     const baseConstants = generateBaseConstants();
 
-    _EconomyController(baseConstants);
+    economyController(baseConstants);
+    logisticsController(baseConstants);
     CreepConstructionController(baseConstants);
 
     clearance();
