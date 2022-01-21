@@ -23,6 +23,13 @@ const upgrade = (baseConstants) => {
             }
         } else {
             if(creep.room.controller) {
+
+                if(creep.room.controller.sign.username !== 'Bizzle_Dapp'
+                    && creep.signController(creep.room.controller, "Our Territory") == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.controller,
+                        { visualizePathStyle: { stroke: '#ffaa00' }
+                    });
+                }
                 if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(creep.room.controller,
                         { visualizePathStyle: { stroke: '#ffaa00' }
