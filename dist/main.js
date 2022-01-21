@@ -9,12 +9,13 @@ const generateBaseConstants = () => {
     // Once we have multiple spawns, pass key/value pairs including nearby resources related to each spawner
     let mainSpawn = Game.rooms[spawnerRooms[0]]
         .find(FIND_MY_STRUCTURES)
-        .filter((s) => s.structureType == 'spawn')[0];
+        .filter((s) => s.structureType == STRUCTURE_SPAWN)[0];
 
     let potentialResource = Game.rooms[spawnerRooms[0]].find(FIND_SOURCES_ACTIVE);
 
     return {
         mainSpawn,
+        spawnerRooms,
         potentialResource
     }
 };
@@ -84,7 +85,7 @@ const upgrade = (baseConstants) => {
             if(creep.room.controller) {
 
                 if(creep.room.controller.sign.username !== 'Bizzle_Dapp'
-                    && creep.signController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                    && creep.signController(creep.room.controller, "Our Territory") == ERR_NOT_IN_RANGE) {
                     creep.moveTo(creep.room.controller,
                         { visualizePathStyle: { stroke: '#ffaa00' }
                     });
@@ -102,6 +103,27 @@ const upgrade = (baseConstants) => {
 function logisticsController(baseConstants) {
     upgrade(baseConstants);
 }
+
+const constructionAnalyser = (baseConstants) => {
+    const { mainSpawn } = baseConstants;
+    
+    const terrain = Game.rooms[mainSpawn.room.name].getTerrain();
+    const buildableLocations = [];
+
+    for(let y = 0; y < 50; y++) {
+        for(let x = 0; x < 50; x++) {
+            const tile = terrain.get(x, y);
+            
+            if(tile === 0) {
+                Game.rooms[mainSpawn.room.name].visual.circle(x,y,
+                    {fill: 'transparent', radius: 0.1, stroke: 'green'});
+                buildableLocations.push({x: x, y: y});
+            }
+        }
+    }
+    console.log("Buildable Locations:");
+    Memory.buildableLocations = buildableLocations;
+};
 
 function harvesterConstruction(baseConstants) {
     const { mainSpawn } = baseConstants;
@@ -129,11 +151,15 @@ function upgraderConstruction(baseConstants) {
     }
 }
 
+let lastScanned = undefined;
+
 function CreepConstructionController(baseConstants) {
     // Detect available building space
-
-    // Allocate space depending on current projects
-
+    
+    if(!lastScanned || lastScanned < (Date.now() - 10000)){
+        constructionAnalyser(baseConstants);
+        lastScanned = Date.now();
+    }
     harvesterConstruction(baseConstants);
     upgraderConstruction(baseConstants);
 }
