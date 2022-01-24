@@ -1,15 +1,21 @@
 import _ from "lodash";
 
-const constructionAnalyser = (baseConstants) => {
-    const { mainSpawn } = baseConstants;
+/**
+ * Determines and returns buildable positions around the spawner
+ * @param {{"MAIN_SPAWN": Spawner}} baseConstants - An object of constant defined values specific to the base
+ * @param {number} radius - A numeric value to check around the spawn in each direction
+ * @returns {[{"x": number, "y": number}]} An array of buildable x,y coordinate objects
+ */
+const spawnAreaConstructionAnalyser = (baseConstants, radius) => {
+    const { MAIN_SPAWN } = baseConstants;
 
-    const room = Game.rooms[mainSpawn.room.name];
+    const room = Game.rooms[MAIN_SPAWN.room.name];
     // Scan area
     const scannedArea = room.lookAtArea(
-        mainSpawn.pos.y - 10,
-        mainSpawn.pos.x - 10,
-        mainSpawn.pos.y + 10,
-        mainSpawn.pos.x + 10,
+        MAIN_SPAWN.pos.y - radius,
+        MAIN_SPAWN.pos.x - radius,
+        MAIN_SPAWN.pos.y + radius,
+        MAIN_SPAWN.pos.x + radius,
         true
     );
     // Create an ignore list of all positions occupied by something other than terrain
@@ -33,6 +39,8 @@ const constructionAnalyser = (baseConstants) => {
                 stroke: 'green'
             });
     });
+
+    return filteredArea
 }
 
-export default constructionAnalyser;
+export default spawnAreaConstructionAnalyser;

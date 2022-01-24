@@ -1,6 +1,6 @@
 
 const upgrade = (baseConstants) => {
-    const { potentialResource } = baseConstants;
+    const { POTENTIAL_RESOURCE } = baseConstants;
 
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
@@ -15,9 +15,9 @@ const upgrade = (baseConstants) => {
             creep.say('💪upgrade', true);
         }
         if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-            if (creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            if (creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(
-                    potentialResource[creep.memory.resourceDivide], 
+                    POTENTIAL_RESOURCE[creep.memory.resourceDivide], 
                     { visualizePathStyle: { stroke: '#ffaa00' } 
                 });
             }

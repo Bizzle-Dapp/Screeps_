@@ -1,33 +1,27 @@
 'use strict';
 
-var _$1 = require('lodash');
-
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-var ___default = /*#__PURE__*/_interopDefaultLegacy(_$1);
-
-const spawnerRooms = Object.values(Game.spawns).map((v) => v.room.name);
+const SPAWNER_ROOMS = Object.values(Game.spawns).map((v) => v.room.name);
 
 /**
  * Returns key base information
  */
 const generateBaseConstants = () => {
     // Once we have multiple spawns, pass key/value pairs including nearby resources related to each spawner
-    let mainSpawn = Game.rooms[spawnerRooms[0]]
+    const MAIN_SPAWN = Game.rooms[SPAWNER_ROOMS[0]]
         .find(FIND_MY_STRUCTURES)
         .filter((s) => s.structureType == STRUCTURE_SPAWN)[0];
 
-    let potentialResource = Game.rooms[spawnerRooms[0]].find(FIND_SOURCES_ACTIVE);
+    const POTENTIAL_RESOURCE = Game.rooms[SPAWNER_ROOMS[0]].find(FIND_SOURCES_ACTIVE);
 
     return {
-        mainSpawn,
-        spawnerRooms,
-        potentialResource
+        MAIN_SPAWN,
+        SPAWNER_ROOMS,
+        POTENTIAL_RESOURCE
     }
 };
 
 function harvest(baseConstants) {
-    const { mainSpawn, potentialResource } = baseConstants;
+    const { MAIN_SPAWN, POTENTIAL_RESOURCE } = baseConstants;
 
     let harvesters = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'harvester');
@@ -41,20 +35,20 @@ function harvest(baseConstants) {
             creep.memory.harvesting = false;
             creep.say('💲banking', true);
         }
-        if (creep.memory.harvesting && creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+        if (creep.memory.harvesting && creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
             creep.moveTo(
-                potentialResource[creep.memory.resourceDivide],
+                POTENTIAL_RESOURCE[creep.memory.resourceDivide],
                 { visualizePathStyle: { stroke: '#ffaa00' } });
 
         }
         if (!creep.memory.harvesting) {
-            mainSpawn.room.find(FIND_MY_STRUCTURES, {
+            MAIN_SPAWN.room.find(FIND_MY_STRUCTURES, {
                 filter: (i) => ((i.structureType == STRUCTURE_CONTAINER) &&
                     i.store.getFreeCapacity() > 0)
             });
             
-            if (creep.transfer(mainSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(mainSpawn,
+            if (creep.transfer(MAIN_SPAWN, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(MAIN_SPAWN,
                     { visualizePathStyle: { stroke: '#ffffff' } });
             }
         }
@@ -66,7 +60,7 @@ function economyController(baseConstants) {
 }
 
 const upgrade = (baseConstants) => {
-    const { potentialResource } = baseConstants;
+    const { POTENTIAL_RESOURCE } = baseConstants;
 
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
@@ -81,9 +75,9 @@ const upgrade = (baseConstants) => {
             creep.say('💪upgrade', true);
         }
         if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-            if (creep.harvest(potentialResource[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            if (creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(
-                    potentialResource[creep.memory.resourceDivide], 
+                    POTENTIAL_RESOURCE[creep.memory.resourceDivide], 
                     { visualizePathStyle: { stroke: '#ffaa00' } 
                 });
             }
@@ -110,75 +104,35 @@ function logisticsController(baseConstants) {
     upgrade(baseConstants);
 }
 
-const constructionAnalyser = (baseConstants) => {
-    const { mainSpawn } = baseConstants;
-
-    const room = Game.rooms[mainSpawn.room.name];
-    // Scan area
-    const scannedArea = room.lookAtArea(
-        mainSpawn.pos.y - 10,
-        mainSpawn.pos.x - 10,
-        mainSpawn.pos.y + 10,
-        mainSpawn.pos.x + 10,
-        true
-    );
-    // Create an ignore list of all positions occupied by something other than terrain
-    const ignoreList = [];
-    ___default["default"].forEach(scannedArea.filter(x => x.type !== 'terrain'), x => {
-        ignoreList.push({ x: x.x, y: x.y });
-    });
-    // Filter the scannedArea of any positions contained in the ignoreList
-    const filteredArea = [];
-    ___default["default"].forEach(scannedArea.filter(x => x.type === 'terrain' && x.terrain === 'plain'), x => {
-        if (!ignoreList.find(y =>  y.x == x.x && y.y == x.y)) {
-            filteredArea.push(x);
-        }    });
-    // Display our available locations
-    filteredArea.forEach((areaDetails) => {
-        room.visual.circle(areaDetails.x, areaDetails.y,
-            {
-                fill: 'transparent',
-                radius: 0.1,
-                stroke: 'green'
-            });
-    });
-};
-
 function harvesterConstruction(baseConstants) {
-    const { mainSpawn } = baseConstants;
+    const { MAIN_SPAWN } = baseConstants;
     // Spawn a Harvester
     let harvesters = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'harvester');
     if (harvesters.length < 4) {
         let id = Date.now();
-        mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Worker-${id.toString()}`, {
+        MAIN_SPAWN.spawnCreep([WORK, CARRY, MOVE], `Worker-${id.toString()}`, {
             memory: { role: 'harvester', resourceDivide: (harvesters.length % 2)  }
         });
     }
 }
 
 function upgraderConstruction(baseConstants) {
-    const { mainSpawn } = baseConstants;
+    const { MAIN_SPAWN } = baseConstants;
     // Spawn an Upgrader
     let upgraders = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'upgrader');
     if (upgraders.length < 1) {
         let id = Date.now();
-        mainSpawn.spawnCreep([WORK, CARRY, MOVE], `Upgrader-${id.toString()}`, {
+        MAIN_SPAWN.spawnCreep([WORK, CARRY, MOVE], `Upgrader-${id.toString()}`, {
             memory: { role: 'upgrader', resourceDivide: (upgraders.length % 2)  }
         });
     }
 }
 
-let lastScanned = undefined;
-
 function populationController(baseConstants) {
-    // Detect available building space
     
-    if(!lastScanned || lastScanned < (Date.now() - 10000)){
-        constructionAnalyser(baseConstants);
-        lastScanned = Date.now();
-    }
+
     harvesterConstruction(baseConstants);
     upgraderConstruction(baseConstants);
 }
