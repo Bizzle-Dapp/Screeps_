@@ -1,10 +1,10 @@
-import constructionAnalyser from './ConstructionAnalyser';
+import constructionAnalyser from '../Construction/ConstructionAnalyser';
 import harvesterConstruction from './HarvesterConstruction';
 import upgraderConstruction from './UpgraderConstruction';
 
 let lastScanned = undefined;
 
-function CreepConstructionController(baseConstants) {
+function populationController(baseConstants) {
     // Detect available building space
     
     if(!lastScanned || lastScanned < (Date.now() - 10000)){
@@ -16,4 +16,4 @@ function CreepConstructionController(baseConstants) {
     upgraderConstruction(baseConstants);
 }
 
-export default CreepConstructionController;
+export default populationController;

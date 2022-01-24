@@ -172,7 +172,7 @@ function upgraderConstruction(baseConstants) {
 
 let lastScanned = undefined;
 
-function CreepConstructionController(baseConstants) {
+function populationController(baseConstants) {
     // Detect available building space
     
     if(!lastScanned || lastScanned < (Date.now() - 10000)){
@@ -188,7 +188,7 @@ module.exports.loop = function () {
 
     economyController(baseConstants);
     logisticsController(baseConstants);
-    CreepConstructionController(baseConstants);
+    populationController(baseConstants);
 
     clearance();
 };
