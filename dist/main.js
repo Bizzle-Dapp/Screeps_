@@ -155,8 +155,21 @@ function builderConstruction(baseConstants) {
     }
 }
 
+function defenderConstruction(baseConstants) {
+    // Spawn a Defender
+    let defenders = _.filter(Game.creeps,
+        (creep) => creep.memory.role == 'defender');
+    if (defenders.length < 2) {
+        let id = Date.now();
+        baseConstants.MAIN_SPAWN.spawnCreep([ATTACK, ATTACK, MOVE, MOVE], `Defender-${id.toString()}`, {
+            memory: { role: 'defender' }
+        });
+    }
+}
+
 function populationController(baseConstants) {
     // Priority of lowest to highest.
+    defenderConstruction(baseConstants);
     builderConstruction(baseConstants);
     upgraderConstruction(baseConstants);
     harvesterConstruction(baseConstants);
@@ -348,13 +361,49 @@ const constructionController = (baseConstants) => {
     }    build(baseConstants);
 };
 
+let tick = 0;
+const defendRoom = (baseConstants) => {
+    let defenders = _.filter(Game.creeps,
+        (creep) => creep.memory.role == 'defender');
+
+    if (tick > 10) {
+        tick = 0;
+    }
+    else {
+        tick++;
+    }
+    _.forEach(defenders, (creep) => {
+        if (!creep.memory.patrol) {
+            creep.memory.patrol = 'left';
+        }
+
+        let closestHostile = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        if (closestHostile) {
+            creep.say('⚔️Engaging', true);
+            if (creep.attack(closestHostile) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(closestHostile, { visualizePathStyle: { stroke: '#f70000bf' } });
+            }
+        }
+        else {
+            if (tick % 5 === 0) {
+                creep.say('⚔️Clear', true);
+            }
+        }
+    });
+};
+
+function warfareController(baseConstants) {
+    defendRoom();
+}
+
 module.exports.loop = function () {
     const baseConstants = generateBaseConstants();
 
-    economyController(baseConstants);
-    logisticsController(baseConstants);
-    populationController(baseConstants);
+    warfareController();
     constructionController(baseConstants);
+    logisticsController(baseConstants);
+    economyController(baseConstants);
+    populationController(baseConstants);
     clearance();
 };
 
