@@ -29,7 +29,7 @@ const generateBaseConstants = () => {
 function harvest(baseConstants) {
     const { MAIN_SPAWN, POTENTIAL_RESOURCE } = baseConstants;
 
-    let harvesters = _.filter(Game.creeps,
+    const harvesters = _.filter(Game.creeps,
         (creep) => creep.memory.role == 'harvester');
     // Move Harvester to location, harvest, then return to spawn and deposit
     harvesters.forEach((creep) => {
@@ -41,25 +41,29 @@ function harvest(baseConstants) {
             creep.memory.harvesting = false;
             creep.say('💲banking', true);
         }
-        if (creep.memory.harvesting && creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+        creepHarvest(creep, MAIN_SPAWN, POTENTIAL_RESOURCE);
+    });
+}
+
+const creepHarvest = (creep, MAIN_SPAWN, POTENTIAL_RESOURCE) => {
+    if (!creep.memory.harvesting) {
+        MAIN_SPAWN.room.find(FIND_MY_STRUCTURES, {
+            filter: (i) => ((i.structureType == STRUCTURE_CONTAINER) &&
+                i.store.getFreeCapacity() > 0)
+        });
+        
+        if (creep.transfer(MAIN_SPAWN, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(MAIN_SPAWN,
+                { visualizePathStyle: { stroke: '#ffffff' } });
+        }
+    } else {
+        if (creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
             creep.moveTo(
                 POTENTIAL_RESOURCE[creep.memory.resourceDivide],
                 { visualizePathStyle: { stroke: '#ffaa00' } });
-
         }
-        if (!creep.memory.harvesting) {
-            MAIN_SPAWN.room.find(FIND_MY_STRUCTURES, {
-                filter: (i) => ((i.structureType == STRUCTURE_CONTAINER) &&
-                    i.store.getFreeCapacity() > 0)
-            });
-            
-            if (creep.transfer(MAIN_SPAWN, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(MAIN_SPAWN,
-                    { visualizePathStyle: { stroke: '#ffffff' } });
-            }
-        }
-    });
-}
+    }
+};
 
 function economyController(baseConstants) {
     harvest(baseConstants);
@@ -80,30 +84,33 @@ const upgrade = (baseConstants) => {
             creep.memory.upgrading = true;
             creep.say('💪upgrade', true);
         }
-        if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-            if (creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(
-                    POTENTIAL_RESOURCE[creep.memory.resourceDivide], 
-                    { visualizePathStyle: { stroke: '#ffaa00' } 
+        creepUpgrade(creep, POTENTIAL_RESOURCE);
+    });
+};
+
+const creepUpgrade = (creep, POTENTIAL_RESOURCE) => {
+    if (!creep.memory.upgrading && creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
+        if (creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(
+                POTENTIAL_RESOURCE[creep.memory.resourceDivide], 
+                { visualizePathStyle: { stroke: '#ffaa00' } 
+            });
+        }
+    } else {
+        if(creep.room.controller) {
+            if(creep.room.controller.sign.username !== 'Bizzle_Dapp'
+                && creep.signController(creep.room.controller, "Our Territory") == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.controller,
+                    { visualizePathStyle: { stroke: '#ffaa00' }
                 });
             }
-        } else {
-            if(creep.room.controller) {
-
-                if(creep.room.controller.sign.username !== 'Bizzle_Dapp'
-                    && creep.signController(creep.room.controller, "Our Territory") == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.controller,
-                        { visualizePathStyle: { stroke: '#ffaa00' }
-                    });
-                }
-                if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.controller,
-                        { visualizePathStyle: { stroke: '#ffaa00' }
-                    });
-                }
+            if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.controller,
+                    { visualizePathStyle: { stroke: '#ffaa00' }
+                });
             }
         }
-    });
+    }
 };
 
 function logisticsController(baseConstants) {
@@ -136,11 +143,23 @@ function upgraderConstruction(baseConstants) {
     }
 }
 
-function populationController(baseConstants) {
-    
+function builderConstruction(baseConstants) {
+    // Spawn a Builder
+    let builders = _.filter(Game.creeps,
+        (creep) => creep.memory.role == 'builder');
+    if (builders.length < 3) {
+        let id = Date.now();
+        baseConstants.MAIN_SPAWN.spawnCreep([WORK, WORK, CARRY, MOVE], `Builder-${id.toString()}`, {
+            memory: { role: 'builder', resourceDivide: (builders.length % 2)  }
+        });
+    }
+}
 
-    harvesterConstruction(baseConstants);
+function populationController(baseConstants) {
+    // Priority of lowest to highest.
+    builderConstruction(baseConstants);
     upgraderConstruction(baseConstants);
+    harvesterConstruction(baseConstants);
 }
 
 /**
@@ -200,15 +219,134 @@ Allocate a fixed position on all sides for a tower defence.
 Leaves a gap on all sides to enter and leave - a bottle neck.
  */
 
+const baseFabrication = (baseConstants, buildingPositions, RADIUS) => {
+    const { SPAWNER_ROOMS, MAIN_SPAWN } = baseConstants;
+
+    const room = Game.rooms[SPAWNER_ROOMS[0]];
+    let constructionSites = room.find(FIND_MY_CONSTRUCTION_SITES).length;
+    ___default["default"].forEach(buildingPositions, (position) => {
+        // Cap at 10 construction sites so as to not overwhelm workers.
+        if(constructionSites.length >= 10) { 
+            return; 
+        }        fabricationManagement(position, room, MAIN_SPAWN, RADIUS);
+        constructionSites++;
+    });
+};
+
+const fabricationManagement = (position, room, MAIN_SPAWN, RADIUS) => {
+    const { x, y} = position;
+
+    // If x +/- and y +/- align with RADIUS distance in all directions. Build a Road.
+    if( x === (MAIN_SPAWN.pos.x + RADIUS) && y === MAIN_SPAWN.pos.y || 
+        x === (MAIN_SPAWN.pos.x - RADIUS) && y === MAIN_SPAWN.pos.y ||
+        x === MAIN_SPAWN.pos.x && y === (MAIN_SPAWN.pos.y - RADIUS) ||
+        x === MAIN_SPAWN.pos.x && y === (MAIN_SPAWN.pos.y + RADIUS) ) {
+            // Road
+            room.createConstructionSite(x, y, STRUCTURE_ROAD);
+            return;
+        }
+
+
+    // If x or y are equal to Spawn positions vertexes +/- RADIUS; Build a wall.
+    // Except where both are +/- RADUIS, build a Road here.
+    if( x === (MAIN_SPAWN.pos.x + RADIUS) || x === (MAIN_SPAWN.pos.x - RADIUS) ||
+        y === (MAIN_SPAWN.pos.y + RADIUS) || y === (MAIN_SPAWN.pos.y - RADIUS) ) {
+            // Wall
+            room.createConstructionSite(x, y, STRUCTURE_WALL);
+            return;
+        }
+
+    // Logical nightmare.
+    // switch (x % 2){
+    //     case 1:
+    //         switch (y % 2){
+    //             case 1:
+    //                 // X Odd Y Odd
+    //                 break;
+    //             default:
+    //                 // X Odd  Y Even
+    //                 break;
+    //         }
+    //         break;
+    //     default:
+    //         switch (y % 2){
+    //             case 1:
+    //                 // X Even Y Odd
+    //                 break;
+    //             default:
+    //                 // X Even Y Even
+    //                 break;
+    //         }
+    //         break;
+    // }
+};
+
+function build(baseConstants) {
+    const { MAIN_SPAWN, POTENTIAL_RESOURCE } = baseConstants;
+
+    const builders = _.filter(Game.creeps,
+        (creep) => creep.memory.role == 'builder');
+
+    _.forEach(builders, (creep) => {
+        if (!creep.memory.building && creep.store.getFreeCapacity() === 0) {
+            creep.memory.building = true;
+            creep.say('🏗build', true);
+        }
+        if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
+            creep.memory.building = false;
+            creep.say('🔄harvest', true);
+        }
+        const unsortedSites = creep.room.find(FIND_CONSTRUCTION_SITES);
+
+        if (unsortedSites.length > 0) {
+            // Construction Sites Available to build
+            const sortedSites = unsortedSites.sort((a, b) => {
+                if (a.progress > b.progress)
+                    return -1;
+                if (a.progress < b.progress)
+                    return 1;
+                return 0;
+            });
+
+            if (creep.memory.building && creep.build(sortedSites[0]) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(sortedSites[0], { visualizePathStyle: { stroke: '#ffffff' } });
+            } else if (!creep.memory.building && creep.harvest(POTENTIAL_RESOURCE[creep.memory.resourceDivide]) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(
+                    POTENTIAL_RESOURCE[creep.memory.resourceDivide],
+                    { visualizePathStyle: { stroke: '#ffaa00' } });
+            }
+        }
+        else {
+            // No construction Sites Available to build
+            // If containers available to fill - do so
+            // creepHarvest(creep, MAIN_SPAWN, POTENTIAL_RESOURCE);
+            // Otherwise, upgrade the controller!
+            creepUpgrade(creep, POTENTIAL_RESOURCE);
+        }
+    });
+}
+
 let lastScanned = undefined;
 
 const constructionController = (baseConstants) => {
-    // Periodically detect available building space
+    const { SPAWNER_ROOMS } = baseConstants;
     const TEN_SECONDS = 10000;
-    if(!lastScanned || lastScanned < (Date.now() - TEN_SECONDS)){
-        spawnAreaConstructionAnalyser(baseConstants, 10);
+    const RADIUS = 10;
+
+    let totalCreeps = 0;
+    
+    ___default["default"].forEach(SPAWNER_ROOMS, (roomName) => {
+        totalCreeps += Game.rooms[roomName].find(FIND_MY_CREEPS).length;
+    });
+
+    // Periodically detect available building space
+    if(!lastScanned && totalCreeps > 3 || 
+        lastScanned < (Date.now() - TEN_SECONDS) && totalCreeps > 3 ){
+        const buildingPositions = spawnAreaConstructionAnalyser(baseConstants, RADIUS);
+        baseFabrication(baseConstants, buildingPositions, RADIUS);
         lastScanned = Date.now();
-    }};
+    }    build(baseConstants);
+};
 
 module.exports.loop = function () {
     const baseConstants = generateBaseConstants();
